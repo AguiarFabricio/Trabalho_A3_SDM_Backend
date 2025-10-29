@@ -4,6 +4,6 @@ package dao;
  *
  * @author mario
  */
-public class ProdutoDAO {
+public class ConexaoDAO {
     
 }
