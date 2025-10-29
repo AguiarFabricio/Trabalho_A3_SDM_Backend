@@ -20,11 +20,6 @@ public class Categoria {
         this.embalagem = embalagem;
         this.tamanho = tamanho;
     }
-    
-    public Categoria(int idCategoria, String nomeCategoria) {
-        this.id = idCategoria;
-        this.nome = nomeCategoria;
-    }
 
     public int getId() {
         return id;
@@ -60,6 +55,6 @@ public class Categoria {
     
     @Override
     public String toString() {
-        return id + " / " + nome;
+        return id + " | " + nome;
     }
 }

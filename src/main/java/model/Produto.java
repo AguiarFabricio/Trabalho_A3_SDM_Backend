@@ -94,6 +94,6 @@ public class Produto {
     
     @Override
     public String toString() {
-        return nome;
+        return id + " | " + nome + " (" + categoria.getNome() + ")";
     }
 }
