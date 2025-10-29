@@ -58,6 +58,7 @@ public class Categoria {
         this.tamanho = tamanho;
     }
     
+    @Override
     public String toString() {
         return id + " / " + nome;
     }
