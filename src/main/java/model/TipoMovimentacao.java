@@ -4,6 +4,6 @@ package model;
  *
  * @author mario
  */
-public class TipoMovimentacao {
-    
+public enum TipoMovimentacao {
+    ENTRADA, SAIDA
 }
