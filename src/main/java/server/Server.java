@@ -3,8 +3,10 @@ package server;
 import java.io.*;
 import java.net.*;
 import java.util.List;
-import dao.CategoriaDAO;
 import model.Categoria;
+import model.Produto;
+import service.CategoriaService;
+import service.ProdutoService;
 
 public class Server {
 
@@ -12,54 +14,58 @@ public class Server {
 
     public static void main(String[] args) {
         try (ServerSocket server = new ServerSocket(PORTA)) {
-            System.out.println("✅ Servidor na porta " + PORTA);
+            System.out.println("Servidor iniciado na porta " + PORTA);
 
             while (true) {
                 Socket cliente = server.accept();
                 System.out.println("Cliente conectado: " + cliente.getInetAddress());
-                new Thread(() -> atender(cliente)).start();
+                new Thread(() -> atenderCliente(cliente)).start();
             }
 
         } catch (IOException e) {
-            e.printStackTrace(); // importante pra saber se deu erro ao abrir porta
+            e.printStackTrace();
         }
     }
 
-    private static void atender(Socket socket) {
+    private static void atenderCliente(Socket socket) {
         try (Socket s = socket) {
-            // ordem correta das streams
             ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
-            out.flush(); // evita deadlock
+            out.flush();
             ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 
+            CategoriaService categoriaService = new CategoriaService();
+            ProdutoService produtoService = new ProdutoService();
+
             String comando = in.readUTF();
-            System.out.println("Comando recebido: " + comando);
+            System.out.println("comando recebido: " + comando);
 
             switch (comando) {
+
+                // ---- CATEGORIAS ----
                 case "INSERIR_CATEGORIA" -> {
                     Categoria c = (Categoria) in.readObject();
-                    new CategoriaDAO().inserir(c);
-                    out.writeUTF("OK: Categoria inserida");
+                    String resposta = categoriaService.inserir(c);
+                    out.writeUTF(resposta);
                     out.flush();
                 }
 
                 case "LISTAR_CATEGORIAS" -> {
-                    List<Categoria> lista = new CategoriaDAO().listar();
+                    List<Categoria> lista = categoriaService.listar();
                     out.writeObject(lista);
                     out.flush();
                 }
 
-                case "ATUALIZAR_CATEGORIA" -> {
-                    Categoria cUpd = (Categoria) in.readObject();
-                    new CategoriaDAO().atualizar(cUpd);
-                    out.writeUTF("OK: Categoria atualizada");
+                // ---- PRODUTOS ----
+                case "INSERIR_PRODUTO" -> {
+                    Produto p = (Produto) in.readObject();
+                    String resposta = produtoService.inserir(p);
+                    out.writeUTF(resposta);
                     out.flush();
                 }
 
-                case "EXCLUIR_CATEGORIA" -> {
-                    int id = in.readInt();
-                    new CategoriaDAO().excluir(id);
-                    out.writeUTF("OK: Categoria excluída");
+                case "LISTAR_PRODUTOS" -> {
+                    List<Produto> lista = produtoService.listar();
+                    out.writeObject(lista);
                     out.flush();
                 }
 
@@ -69,8 +75,9 @@ public class Server {
                 }
             }
 
-        } catch (Exception ex) {
-            System.err.println("Erro ao atender cliente: " + ex.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erro ao atender cliente: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
