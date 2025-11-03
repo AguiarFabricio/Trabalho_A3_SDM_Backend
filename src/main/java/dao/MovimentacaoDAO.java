@@ -55,4 +55,8 @@ public class MovimentacaoDAO {
             System.out.println("Erro ao excluir movimentação: " + e.getMessage());
         }
     }
+
+    public boolean atualizarEstoque(int produtoId, int quantidade, String tipo) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
