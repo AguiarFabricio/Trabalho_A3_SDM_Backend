@@ -1,56 +1,72 @@
-package com.sdm.service;
+package service;
 
 import dao.MovimentacaoDAO;
-import model.Movimentacao;
 import dao.ProdutoDAO;
+import model.Movimentacao;
 import model.Produto;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 
 public class MovimentacaoService {
 
-    private MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAO();
-    private ProdutoDAO produtoDAO = new ProdutoDAO();
+    private final MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAO();
+    private final ProdutoDAO produtoDAO = new ProdutoDAO();
 
     /*
-    Método para registrar a movimentação e mostrar se o produto está acima do máximo
-    ou abaixo do mínimo
+     * Registra movimentação de entrada ou saída e atualiza o estoque
      */
-    public boolean registrarEstoque(int produtoId, int quantidade, String tipo, String dataStr) {
-        /*
-        1. Cria objeto movimentação
-         */
-        Movimentacao movimentacao = new Movimentacao();
-        movimentacao.setProdutoId(produtoId);
-        movimentacao.setQuantidade(quantidade);
-        movimentacao.setTipo(tipo);
+    public String registrarEstoque(int produtoId, int quantidade, String tipo, String dataStr) {
+        try {
+            // 1️⃣ Criar movimentação
+            Movimentacao movimentacao = new Movimentacao();
+            movimentacao.setProdutoId(produtoId);
+            movimentacao.setQuantidade(quantidade);
+            movimentacao.setTipo(tipo);
 
-        /*
-        Definir data
-         */
-        LocalDateTime data;
-        if (dataStr != null && !dataStr.isEmpty()) {
-            data = LocalDateTime.parse(dataStr);
-        } else {
-            data = LocalDateTime.now();
-        }
-        movimentacao.setData(data);
+            // 2️⃣ Definir data
+            LocalDateTime data;
+            try {
+                if (dataStr != null && !dataStr.isEmpty()) {
+                    data = LocalDateTime.parse(dataStr);
+                } else {
+                    data = LocalDateTime.now();
+                }
+            } catch (DateTimeParseException e) {
+                data = LocalDateTime.now();
+            }
+            movimentacao.setData(data);
 
-        /*
-        2. Envia solicitação de atualização de estoque ao DAO
-         */
-        boolean estoqueAtualizado = movimentacaoDAO.atualizarEstoque(produtoId, quantidade, tipo);
+            // 3️⃣ Registrar movimentação no banco
+            movimentacaoDAO.inserir(movimentacao);
 
-        if (!estoqueAtualizado) { //Se não atualizou, retorna falso
-            return false;
+            // 4️⃣ Atualizar estoque do produto
+            Produto produto = produtoDAO.buscarPorId(produtoId);
+            if (produto == null) {
+                return "ERRO: Produto não encontrado.";
+            }
+
+            if ("ENTRADA".equalsIgnoreCase(tipo)) {
+                produto.setQuantidadeEstoque(produto.getQuantidadeEstoque() + quantidade);
+            } else if ("SAIDA".equalsIgnoreCase(tipo)) {
+                produto.setQuantidadeEstoque(produto.getQuantidadeEstoque() - quantidade);
+            } else {
+                return "ERRO: Tipo de movimentação inválido.";
+            }
+
+            produtoDAO.atualizar(produto);
+
+            // 5️⃣ Verificar se está fora dos limites
+            if (produto.getQuantidadeEstoque() > produto.getQuantidadeMaxima()) {
+                return "AVISO: Quantidade do produto '" + produto.getNome() + "' acima do máximo permitido.";
+            } else if (produto.getQuantidadeEstoque() < produto.getQuantidadeMinima()) {
+                return "AVISO: Quantidade do produto '" + produto.getNome() + "' abaixo do mínimo permitido.";
+            }
+
+            return "OK: Movimentação registrada com sucesso!";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "ERRO ao registrar movimentação: " + e.getMessage();
         }
-        /*
-        Mostra aviso se a quantidade em estoque de determinado produto está acima da quantidade máxima
-        ou abaixo da quantidade mínima
-         */
-        Produto produto = produtoDAO.buscarPorId(movimentacao.getProdutoId());
-        String statusProduto = "Status: ";
-        if (produto.getQuantidadeEstoque() > produto.getQuantidadeMaxima()) {
-            statusProduto += String.format("A quantidade do produto %s está acima da quantidade máxima", produto.getNome());
-        } else if (produto.getQuantidadeEstoque() < produto.getQuantidadeMinima()) {
-            statusProduto += String.format("A quantidade do produto %s está abaixo da quantidade mínima", produto.getNome());
-        }
+    }
+}

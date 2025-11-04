@@ -6,70 +6,74 @@ import java.util.List;
 
 public class ProdutoService {
 
-    private ProdutoDAO produtoDAO;
+    private final ProdutoDAO produtoDAO;
 
     public ProdutoService() {
         this.produtoDAO = new ProdutoDAO();
     }
 
-    public boolean salvar(Produto produto) {
+    //Inserir novo produto
+    public String inserir(Produto produto) {
         if (produto == null) {
-            System.out.println("Produto inválido.");
-            return false;
+            return "ERRO: Produto inválido.";
         }
         if (produto.getNome() == null || produto.getNome().isEmpty()) {
-            System.out.println("O nome do produto não pode ser vazio.");
-            return false;
+            return "ERRO: O nome do produto não pode ser vazio.";
         }
         if (produto.getCategoria() == null) {
-            System.out.println("O produto deve estar vinculado a uma categoria.");
-            return false;
+            return "ERRO: O produto deve estar vinculado a uma categoria.";
         }
         if (produto.getPrecoUnitario() < 0) {
-            System.out.println("O preço não pode ser negativo.");
-            return false;
+            return "ERRO: O preço não pode ser negativo.";
         }
 
         try {
             produtoDAO.inserir(produto);
-            return true;
+            return "OK: Produto inserido com sucesso!";
         } catch (Exception e) {
-            System.out.println("Erro ao salvar produto: " + e.getMessage());
-            return false;
+            e.printStackTrace();
+            return "ERRO ao inserir produto: " + e.getMessage();
         }
     }
 
+    // Listar todos os produtos
     public List<Produto> listar() {
-        return produtoDAO.listar();
+        try {
+            return produtoDAO.listar();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("ERRO ao listar produtos: " + e.getMessage());
+            return List.of();
+        }
     }
 
-    public boolean atualizar(Produto produto) {
+    //Atualizar produto existente
+    public String atualizar(Produto produto) {
         if (produto == null || produto.getId() <= 0) {
-            System.out.println("Produto inválido para atualização.");
-            return false;
+            return "ERRO: Produto inválido para atualização.";
         }
 
         try {
             produtoDAO.atualizar(produto);
-            return true;
+            return "OK: Produto atualizado com sucesso!";
         } catch (Exception e) {
-            System.out.println("Erro ao atualizar produto: " + e.getMessage());
-            return false;
+            e.printStackTrace();
+            return "ERRO ao atualizar produto: " + e.getMessage();
         }
     }
 
-    public boolean deletar(int id) {
+    // Excluir produto por ID
+    public String excluir(int id) {
         if (id <= 0) {
-            System.out.println("ID inválido para exclusão.");
-            return false;
+            return "ERRO: ID inválido para exclusão.";
         }
 
         try {
             produtoDAO.excluir(id);
-            return true;
+            return "OK: Produto excluído com sucesso!";
         } catch (Exception e) {
-            System.out.println("Erro ao excluir produto: " + e.getMessage());
-            return false;
+            e.printStackTrace();
+            return "ERRO ao excluir produto: " + e.getMessage();
         }
     }
 }

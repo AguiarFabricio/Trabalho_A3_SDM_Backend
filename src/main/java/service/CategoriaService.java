@@ -6,36 +6,43 @@ import java.util.List;
 
 public class CategoriaService {
 
-    private CategoriaDAO categoriaDAO;
+    private final CategoriaDAO categoriaDAO;
 
     public CategoriaService() {
         this.categoriaDAO = new CategoriaDAO();
     }
 
-    public boolean salvar(Categoria categoria) {
+    // ➕ Inserir nova categoria
+    public String inserir(Categoria categoria) {
         if (categoria == null) {
-            System.out.println("Categoria nula.");
-            return false;
+            return "ERRO: Categoria nula.";
         }
 
         if (categoria.getNome() == null || categoria.getNome().isEmpty()) {
-            System.out.println("Nome da categoria não pode ser vazio.");
-            return false;
+            return "ERRO: Nome da categoria não pode ser vazio.";
         }
 
         try {
-            categoriaDAO.inserir(categoria); // compatível com seu DAO
-            return true;
+            categoriaDAO.inserir(categoria);
+            return "OK: Categoria inserida com sucesso!";
         } catch (Exception e) {
-            System.out.println("Erro ao salvar categoria: " + e.getMessage());
-            return false;
+            e.printStackTrace();
+            return "ERRO ao inserir categoria: " + e.getMessage();
         }
     }
 
+    // 📋 Listar todas as categorias
     public List<Categoria> listar() {
-        return categoriaDAO.listar();
+        try {
+            return categoriaDAO.listar();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("ERRO ao listar categorias: " + e.getMessage());
+            return List.of(); // retorna lista vazia em caso de erro
+        }
     }
 
+    // 🔍 Buscar categoria por ID
     public Categoria buscarPorId(int id) {
         if (id <= 0) {
             System.out.println("ID inválido.");
@@ -57,33 +64,33 @@ public class CategoriaService {
         return null;
     }
 
-    public boolean atualizar(Categoria categoria) {
+    // ✏️ Atualizar categoria existente
+    public String atualizar(Categoria categoria) {
         if (categoria == null || categoria.getId() <= 0) {
-            System.out.println("Categoria inválida para atualização.");
-            return false;
+            return "ERRO: Categoria inválida para atualização.";
         }
 
         try {
             categoriaDAO.atualizar(categoria);
-            return true;
+            return "OK: Categoria atualizada com sucesso!";
         } catch (Exception e) {
-            System.out.println("Erro ao atualizar categoria: " + e.getMessage());
-            return false;
+            e.printStackTrace();
+            return "ERRO ao atualizar categoria: " + e.getMessage();
         }
     }
 
-    public boolean deletar(int id) {
+    // ❌ Excluir categoria por ID
+    public String excluir(int id) {
         if (id <= 0) {
-            System.out.println("ID inválido para exclusão.");
-            return false;
+            return "ERRO: ID inválido para exclusão.";
         }
 
         try {
-            categoriaDAO.excluir(id); // compatível com seu DAO
-            return true;
+            categoriaDAO.excluir(id);
+            return "OK: Categoria excluída com sucesso!";
         } catch (Exception e) {
-            System.out.println("Erro ao excluir categoria: " + e.getMessage());
-            return false;
+            e.printStackTrace();
+            return "ERRO ao excluir categoria: " + e.getMessage();
         }
     }
 }
