@@ -28,16 +28,19 @@ public class Server {
     }
 
     private static void atenderCliente(Socket socket) {
-        try (Socket s = socket) {
-            ObjectOutputStream out = new ObjectOutputStream(s.getOutputStream());
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+
+        try {
+            out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
-            ObjectInputStream in = new ObjectInputStream(s.getInputStream());
+            in = new ObjectInputStream(socket.getInputStream());
 
             CategoriaService categoriaService = new CategoriaService();
             ProdutoService produtoService = new ProdutoService();
 
             String comando = in.readUTF();
-            System.out.println("comando recebido: " + comando);
+            System.out.println("Comando recebido: " + comando);
 
             switch (comando) {
 
@@ -47,10 +50,12 @@ public class Server {
                     String resposta = categoriaService.inserir(c);
                     out.writeUTF(resposta);
                     out.flush();
+                    System.out.println("Categoria inserida: " + c.getNome());
                 }
 
                 case "LISTAR_CATEGORIAS" -> {
                     List<Categoria> lista = categoriaService.listar();
+                    System.out.println("Servidor enviando categorias: " + lista);
                     out.writeObject(lista);
                     out.flush();
                 }
@@ -61,23 +66,46 @@ public class Server {
                     String resposta = produtoService.inserir(p);
                     out.writeUTF(resposta);
                     out.flush();
+                    System.out.println("Produto inserido: " + p.getNome());
                 }
 
                 case "LISTAR_PRODUTOS" -> {
                     List<Produto> lista = produtoService.listar();
                     out.writeObject(lista);
                     out.flush();
+                    System.out.println("Lista de produtos enviada.");
                 }
 
                 default -> {
                     out.writeUTF("ERRO: comando desconhecido");
                     out.flush();
+                    System.err.println("Comando desconhecido recebido: " + comando);
                 }
             }
 
         } catch (Exception e) {
             System.err.println("Erro ao atender cliente: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException ignored) {
+            }
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException ignored) {
+            }
+            try {
+                if (socket != null) {
+                    socket.close();
+                }
+            } catch (IOException ignored) {
+            }
+            System.out.println("Conexão encerrada com o cliente.");
         }
     }
 }

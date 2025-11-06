@@ -1,29 +1,33 @@
 package model;
 
-import java.time.LocalDateTime;
-/**
- *
- * @author mario
- */
+import java.util.Date;
+
 public class Movimentacao {
     private int id;
-    private int produtoId;
-    private int quantidade;
+    private Produto produto; // associação direta ao produto
     private String tipo;
-    private LocalDateTime data;
+    private int quantidade;
+    private Date dataMovimentacao; // nome esperado pelo DAO
 
     public Movimentacao() {
-        this.data = LocalDateTime.now();
     }
 
-    public Movimentacao(int id, int produtoId, int quantidade, String tipo, LocalDateTime data) {
+    public Movimentacao(int id, Produto produto, String tipo, int quantidade, Date dataMovimentacao) {
         this.id = id;
-        this.produtoId = produtoId;
-        this.quantidade = quantidade;
+        this.produto = produto;
         this.tipo = tipo;
-        this.data = data;
+        this.quantidade = quantidade;
+        this.dataMovimentacao = dataMovimentacao;
     }
 
+    public Movimentacao(Produto produto, String tipo, int quantidade, Date dataMovimentacao) {
+        this.produto = produto;
+        this.tipo = tipo;
+        this.quantidade = quantidade;
+        this.dataMovimentacao = dataMovimentacao;
+    }
+
+    // Getters e Setters
     public int getId() {
         return id;
     }
@@ -32,20 +36,12 @@ public class Movimentacao {
         this.id = id;
     }
 
-    public int getProdutoId() {
-        return produtoId;
+    public Produto getProduto() {
+        return produto;
     }
 
-    public void setProdutoId(int produtoId) {
-        this.produtoId = produtoId;
-    }
-
-    public int getQuantidade() {
-        return quantidade;
-    }
-
-    public void setQuantidade(int quantidade) {
-        this.quantidade = quantidade;
+    public void setProduto(Produto produto) {
+        this.produto = produto;
     }
 
     public String getTipo() {
@@ -56,11 +52,19 @@ public class Movimentacao {
         this.tipo = tipo;
     }
 
-    public LocalDateTime getData() {
-        return data;
+    public int getQuantidade() {
+        return quantidade;
     }
 
-    public void setData(LocalDateTime data) {
-        this.data = data;
+    public void setQuantidade(int quantidade) {
+        this.quantidade = quantidade;
+    }
+
+    public Date getDataMovimentacao() {
+        return dataMovimentacao;
+    }
+
+    public void setDataMovimentacao(Date dataMovimentacao) {
+        this.dataMovimentacao = dataMovimentacao;
     }
 }

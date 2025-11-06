@@ -1,24 +1,18 @@
 package model;
 
-/**
- *
- * @author mario
- */
-public class Categoria {
-    
+import java.io.Serializable;
+
+public class Categoria implements Serializable {
+    private static final long serialVersionUID = 1L; // 🔥 igual nos dois projetos!
+
     private int id;
-    private String nome;   
-    private EmbalagemProduto embalagem;         
-    private TamanhoProduto tamanho;
+    private String nome;
 
-    public Categoria() {
-    }
+    public Categoria() {}
 
-    public Categoria(int id, String nome, EmbalagemProduto embalagem, TamanhoProduto tamanho) {
+    public Categoria(int id, String nome) {
         this.id = id;
         this.nome = nome;
-        this.embalagem = embalagem;
-        this.tamanho = tamanho;
     }
 
     public int getId() {
@@ -37,24 +31,8 @@ public class Categoria {
         this.nome = nome;
     }
 
-    public EmbalagemProduto getEmbalagem() {
-        return embalagem;
-    }
-
-    public void setEmbalagem(EmbalagemProduto embalagem) {
-        this.embalagem = embalagem;
-    }
-
-    public TamanhoProduto getTamanho() {
-        return tamanho;
-    }
-
-    public void setTamanho(TamanhoProduto tamanho) {
-        this.tamanho = tamanho;
-    }
-    
     @Override
     public String toString() {
-        return id + " | " + nome;
+        return nome;
     }
 }

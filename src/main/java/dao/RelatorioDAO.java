@@ -6,38 +6,28 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProdutoDAO {
+public class RelatorioDAO {
 
-    public String inserir(Produto produto) {
-        String sql = "INSERT INTO produto (nome, preco, tipo_unidade, quantidade_atual, quantidade_minima, quantidade_maxima, categoria_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, produto.getNome());
-            stmt.setDouble(2, produto.getPreco());
-            stmt.setString(3, produto.getTipoUnidade());
-            stmt.setInt(4, produto.getQuantidadeAtual());
-            stmt.setInt(5, produto.getQuantidadeMinima());
-            stmt.setInt(6, produto.getQuantidadeMaxima());
-            stmt.setInt(7, produto.getCategoria().getId());
-
-            stmt.executeUpdate();
-            return "Produto inserido com sucesso!";
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return "Erro ao inserir produto: " + e.getMessage();
-        }
+    public List<Produto> listarProdutosAbaixoDoMinimo() {
+        return listarPorCondicao("p.quantidade_atual < p.quantidade_minima");
     }
 
-    public List<Produto> listar() {
+    public List<Produto> listarProdutosAcimaDoMaximo() {
+        return listarPorCondicao("p.quantidade_atual > p.quantidade_maxima");
+    }
+
+    public List<Produto> listarTodos() {
+        return listarPorCondicao("1=1");
+    }
+
+    private List<Produto> listarPorCondicao(String condicao) {
         List<Produto> lista = new ArrayList<>();
         String sql = """
             SELECT p.*, c.id AS categoria_id, c.nome AS categoria_nome
             FROM produto p
             JOIN categoria c ON p.categoria_id = c.id
-        """;
+            WHERE %s
+        """.formatted(condicao);
 
         try (Connection conn = ConexaoDAO.getConnection();
              Statement stmt = conn.createStatement();
@@ -61,6 +51,7 @@ public class ProdutoDAO {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return lista;
     }
 }
