@@ -11,11 +11,16 @@ public class CategoriaDAO {
 
     public void inserir(Categoria categoria) {
         String sql = "INSERT INTO categoria (nome, embalagem, tamanho) VALUES (?, ?, ?)";
-        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, categoria.getNome());
             stmt.setString(2, categoria.getEmbalagem().name());
             stmt.setString(3, categoria.getTamanho().name());
             stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    categoria.setId(rs.getInt(1));
+                }
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao inserir categoria: " + e.getMessage());
         }

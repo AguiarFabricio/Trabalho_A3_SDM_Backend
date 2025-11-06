@@ -45,12 +45,11 @@ public class ProdutoDAO {
                 p.setQuantidadeMinima(rs.getInt("quantidadeMinima"));
                 p.setQuantidadeMaxima(rs.getInt("quantidadeMaxima"));
 
-                // Carregar categoria básica (apenas id e nome)
+                // Carregar categoria básica (apenas id)
                 int categoriaId = rs.getInt("categoria_id");
                 if (categoriaId > 0) {
                     Categoria cat = new Categoria();
                     cat.setId(categoriaId);
-                    // opcional: buscar nome via CategoriaDAO, mas evitamos dependência aqui
                     p.setCategoria(cat);
                 }
 
@@ -89,10 +88,6 @@ public class ProdutoDAO {
         }
     }
 
-    /**
-     * Busca produto por ID (preenche os campos básicos, inclusive preco e
-     * quantidades). Retorna null se não encontrado.
-     */
     public Produto buscarPorId(int id) {
         String sql = "SELECT * FROM produto WHERE id = ?";
         Produto produto = null;
@@ -127,16 +122,11 @@ public class ProdutoDAO {
         return produto;
     }
 
-    /**
-     * Reajusta preços de todos os produtos em percentual (ex: 10 para +10%).
-     * Retorna true se executado sem exceção.
-     */
     public boolean reajustarPrecos(double percentual) {
         String sql = "UPDATE produto SET precoUnitario = precoUnitario + (precoUnitario * ? / 100)";
         try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setDouble(1, percentual);
-            int rows = stmt.executeUpdate();
-            // opcional: System.out.println(rows + " produtos atualizados.");
+            stmt.executeUpdate();
             return true;
         } catch (SQLException e) {
             System.out.println("Erro ao reajustar preços: " + e.getMessage());

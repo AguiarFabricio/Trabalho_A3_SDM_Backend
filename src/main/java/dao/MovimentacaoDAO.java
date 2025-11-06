@@ -1,22 +1,25 @@
 package dao;
 
+import model.Movimentacao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import model.Movimentacao;
 
 public class MovimentacaoDAO {
 
     public void inserir(Movimentacao m) {
         String sql = "INSERT INTO movimentacao (produtoId, quantidade, tipo, data) VALUES (?, ?, ?, ?)";
-        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, m.getProdutoId());
             stmt.setInt(2, m.getQuantidade());
             stmt.setString(3, m.getTipo());
             stmt.setTimestamp(4, Timestamp.valueOf(m.getData()));
             stmt.executeUpdate();
-
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    m.setId(rs.getInt(1));
+                }
+            }
         } catch (SQLException e) {
             System.out.println("Erro ao inserir movimentação: " + e.getMessage());
         }
@@ -25,9 +28,7 @@ public class MovimentacaoDAO {
     public List<Movimentacao> listar() {
         List<Movimentacao> lista = new ArrayList<>();
         String sql = "SELECT * FROM movimentacao";
-
         try (Connection conn = ConexaoDAO.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-
             while (rs.next()) {
                 Movimentacao m = new Movimentacao();
                 m.setId(rs.getInt("id"));
@@ -37,7 +38,6 @@ public class MovimentacaoDAO {
                 m.setData(rs.getTimestamp("data").toLocalDateTime());
                 lista.add(m);
             }
-
         } catch (SQLException e) {
             System.out.println("Erro ao listar movimentações: " + e.getMessage());
         }
@@ -47,16 +47,10 @@ public class MovimentacaoDAO {
     public void excluir(int id) {
         String sql = "DELETE FROM movimentacao WHERE id=?";
         try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setInt(1, id);
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             System.out.println("Erro ao excluir movimentação: " + e.getMessage());
         }
-    }
-
-    public boolean atualizarEstoque(int produtoId, int quantidade, String tipo) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }
