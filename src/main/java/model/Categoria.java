@@ -51,13 +51,9 @@ public class Categoria implements Serializable {
         this.tamanho = tamanho;
     } // ✅ tipo enum
 
-    @Override
-    public String toString() {
-        return "Categoria{"
-                + "id=" + id
-                + ", nome='" + nome + '\''
-                + ", embalagem=" + embalagem
-                + ", tamanho=" + tamanho
-                + '}';
-    }
+@Override
+public String toString() {
+    return nome; // agora o combo exibirá só o nome da categoria
+}
+
 }

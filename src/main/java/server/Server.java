@@ -122,6 +122,22 @@ public class Server {
                     out.flush();
                     System.err.println("Comando desconhecido recebido: " + comando);
                 }
+
+                case "ALTERAR_PRODUTO" -> {
+                    try {
+                        Produto produto = (Produto) in.readObject();
+                        System.out.println("Produto a enviar: " + produto.getNome());
+
+                        String resposta = produtoService.atualizar(produto);
+                        out.writeUTF(resposta);
+                        out.flush();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        out.writeUTF("Erro ao alterar produto: " + e.getMessage());
+                        out.flush();
+                    }
+                }
+
             }
 
         } catch (Exception e) {
