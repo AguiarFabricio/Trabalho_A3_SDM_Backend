@@ -84,6 +84,23 @@ public class Server {
                     }
                 }
 
+                case "EXCLUIR_CATEGORIA" -> {
+                    try {
+                        Integer idCategoria = (Integer) in.readObject();  // receber o id
+                        System.out.println("Servidor recebendo ID para exclusão: " + idCategoria);
+
+                        String resposta = categoriaService.excluir(idCategoria); // chama service
+                        out.writeUTF(resposta);
+                        out.flush();
+                        System.out.println(resposta);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        out.writeUTF("Erro ao excluir categoria: " + e.getMessage());
+                        out.flush();
+                    }
+                }
+
                 // ---- PRODUTOS ----
                 case "INSERIR_PRODUTO" -> {
                     Produto p = (Produto) in.readObject();
