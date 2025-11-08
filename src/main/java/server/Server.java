@@ -52,12 +52,36 @@ public class Server {
                     out.flush();
                     System.out.println("Categoria inserida: " + c.getNome());
                 }
+                case "ATUALIZAR_CATEGORIA" -> {
+                    try {
+                        Categoria categoria = (Categoria) in.readObject();
+                        System.out.println("Servidor recebendo categoria para atualizar: " + categoria);
+
+                        categoriaService.atualizar(categoria);
+
+                        out.writeUTF("Categoria atualizada com sucesso!");
+                        out.flush();
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        out.writeUTF("Erro ao atualizar categoria: " + e.getMessage());
+                        out.flush();
+                    }
+                }
 
                 case "LISTAR_CATEGORIAS" -> {
-                    List<Categoria> lista = categoriaService.listar();
-                    System.out.println("Servidor enviando categorias: " + lista);
-                    out.writeObject(lista);
-                    out.flush();
+                    try {
+                        List<Categoria> lista = categoriaService.listar();
+                        System.out.println("Servidor enviando categorias: " + lista);
+
+                        out.writeObject(lista);
+                        out.flush();
+                        System.out.println("✅ Lista de categorias enviada com sucesso!");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        out.writeObject("Erro ao listar categorias: " + e.getMessage());
+                        out.flush();
+                    }
                 }
 
                 // ---- PRODUTOS ----

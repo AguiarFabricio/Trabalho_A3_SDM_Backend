@@ -4,15 +4,19 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import model.Categoria;
+import model.EmbalagemProduto;
+import model.TamanhoProduto;
 
 public class CategoriaDAO {
 
     public void inserir(Categoria categoria) {
-        String sql = "INSERT INTO categoria (nome) VALUES (?)";
+        String sql = "INSERT INTO categoria (nome, embalagem, tamanho) VALUES (?, ?, ?)";
         try (Connection conn = ConexaoDAO.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, categoria.getNome());
+            stmt.setString(2, categoria.getEmbalagem().name()); // Enum → String
+            stmt.setString(3, categoria.getTamanho().name());   // Enum → String
             stmt.executeUpdate();
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -38,6 +42,20 @@ public class CategoriaDAO {
                 Categoria c = new Categoria();
                 c.setId(rs.getInt("id"));
                 c.setNome(rs.getString("nome"));
+                
+                // Converter String → Enum (com verificação segura)
+                try {
+                    c.setEmbalagem(EmbalagemProduto.valueOf(rs.getString("embalagem")));
+                } catch (Exception ex) {
+                    c.setEmbalagem(null);
+                }
+
+                try {
+                    c.setTamanho(TamanhoProduto.valueOf(rs.getString("tamanho")));
+                } catch (Exception ex) {
+                    c.setTamanho(null);
+                }
+
                 lista.add(c);
             }
 
@@ -49,13 +67,18 @@ public class CategoriaDAO {
     }
 
     public void atualizar(Categoria categoria) {
-        String sql = "UPDATE categoria SET nome=? WHERE id=?";
+        String sql = "UPDATE categoria SET nome=?, embalagem=?, tamanho=? WHERE id=?";
+
         try (Connection conn = ConexaoDAO.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, categoria.getNome());
-            stmt.setInt(2, categoria.getId());
+            stmt.setString(2, categoria.getEmbalagem().name()); // Enum → String
+            stmt.setString(3, categoria.getTamanho().name());   // Enum → String
+            stmt.setInt(4, categoria.getId());
+
             stmt.executeUpdate();
+            System.out.println("Categoria atualizada com sucesso!");
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar categoria: " + e.getMessage());
@@ -89,6 +112,18 @@ public class CategoriaDAO {
                     categoria = new Categoria();
                     categoria.setId(rs.getInt("id"));
                     categoria.setNome(rs.getString("nome"));
+
+                    try {
+                        categoria.setEmbalagem(EmbalagemProduto.valueOf(rs.getString("embalagem")));
+                    } catch (Exception ex) {
+                        categoria.setEmbalagem(null);
+                    }
+
+                    try {
+                        categoria.setTamanho(TamanhoProduto.valueOf(rs.getString("tamanho")));
+                    } catch (Exception ex) {
+                        categoria.setTamanho(null);
+                    }
                 }
             }
 
