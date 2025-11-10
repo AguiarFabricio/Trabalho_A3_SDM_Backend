@@ -35,3 +35,6 @@
 * *RNF003* – Toda a persistência dos dados deve ser garantida por meio de um *banco de dados relacional MySQL*, acessado via JDBC.
 * *RNF004* – O código-fonte do sistema deve seguir uma *estrutura modular*, com boas práticas de organização, legibilidade e documentação adequada nas classes e métodos.
 * *RNF005* – O projeto deve utilizar *controle de versão com Git, mantendo o repositório no **GitHub*, com contribuições registradas de forma colaborativa por todos os membros da equipe.
+
+## Repositório Frontend:
+https://github.com/AguiarFabricio/Trabalho_A3_SDM_Frontend
