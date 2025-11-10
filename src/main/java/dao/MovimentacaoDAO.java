@@ -13,13 +13,12 @@ public class MovimentacaoDAO {
     public String inserir(Movimentacao mov) {
         String sql = "INSERT INTO movimentacao (produto_id, tipo, quantidade, data_movimentacao) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, mov.getProduto().getId());
             stmt.setString(2, mov.getTipo());
             stmt.setInt(3, mov.getQuantidade());
-            stmt.setDate(4, new java.sql.Date(mov.getDataMovimentacao().getTime()));
+            stmt.setTimestamp(4, new java.sql.Timestamp(mov.getDataMovimentacao().getTime()));
 
             stmt.executeUpdate();
             return "Movimentação registrada com sucesso!";
@@ -43,9 +42,7 @@ public class MovimentacaoDAO {
             ORDER BY m.data_movimentacao DESC
         """;
 
-        try (Connection conn = ConexaoDAO.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 // Categoria
@@ -70,7 +67,7 @@ public class MovimentacaoDAO {
                 mov.setProduto(produto);
                 mov.setTipo(rs.getString("tipo"));
                 mov.setQuantidade(rs.getInt("quantidade"));
-                mov.setDataMovimentacao(rs.getDate("data_movimentacao"));
+                mov.setDataMovimentacao(rs.getTimestamp("data_movimentacao"));
 
                 lista.add(mov);
             }
@@ -86,8 +83,7 @@ public class MovimentacaoDAO {
         List<Movimentacao> lista = new ArrayList<>();
         String sql = "SELECT * FROM movimentacao WHERE produto_id = ? ORDER BY data_movimentacao DESC";
 
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, produtoId);
             ResultSet rs = stmt.executeQuery();
@@ -97,7 +93,8 @@ public class MovimentacaoDAO {
                 mov.setId(rs.getInt("id"));
                 mov.setTipo(rs.getString("tipo"));
                 mov.setQuantidade(rs.getInt("quantidade"));
-                mov.setDataMovimentacao(rs.getDate("data_movimentacao"));
+                mov.setDataMovimentacao(rs.getTimestamp("data_movimentacao"));
+
                 lista.add(mov);
             }
 
@@ -112,8 +109,7 @@ public class MovimentacaoDAO {
         List<Movimentacao> lista = new ArrayList<>();
         String sql = "SELECT * FROM movimentacao WHERE tipo = ? ORDER BY data_movimentacao DESC";
 
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, tipo);
             ResultSet rs = stmt.executeQuery();
@@ -123,7 +119,8 @@ public class MovimentacaoDAO {
                 mov.setId(rs.getInt("id"));
                 mov.setTipo(rs.getString("tipo"));
                 mov.setQuantidade(rs.getInt("quantidade"));
-                mov.setDataMovimentacao(rs.getDate("data_movimentacao"));
+                mov.setDataMovimentacao(rs.getTimestamp("data_movimentacao"));
+
                 lista.add(mov);
             }
 

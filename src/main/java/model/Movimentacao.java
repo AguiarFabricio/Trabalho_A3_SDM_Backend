@@ -1,13 +1,22 @@
 package model;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Movimentacao {
+/**
+ * Classe que representa uma movimentação de estoque (entrada ou saída de
+ * produtos). Implementa Serializable para permitir envio via rede ou gravação
+ * em arquivo.
+ */
+public class Movimentacao implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private int id;
-    private Produto produto; // associação direta ao produto
+    private Produto produto;
     private String tipo;
     private int quantidade;
-    private Date dataMovimentacao; // nome esperado pelo DAO
+    private Date dataMovimentacao;
 
     public Movimentacao() {
     }
@@ -66,5 +75,16 @@ public class Movimentacao {
 
     public void setDataMovimentacao(Date dataMovimentacao) {
         this.dataMovimentacao = dataMovimentacao;
+    }
+
+    @Override
+    public String toString() {
+        return "Movimentacao{"
+                + "id=" + id
+                + ", produto=" + (produto != null ? produto.getNome() : "N/A")
+                + ", tipo='" + tipo + '\''
+                + ", quantidade=" + quantidade
+                + ", dataMovimentacao=" + dataMovimentacao
+                + '}';
     }
 }

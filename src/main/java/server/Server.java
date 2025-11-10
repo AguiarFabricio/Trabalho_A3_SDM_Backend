@@ -10,45 +10,66 @@ import model.Produto;
 import service.CategoriaService;
 import service.ProdutoService;
 
+/**
+ * Servidor principal responsável por gerenciar conexões de clientes e executar
+ * comandos recebidos (Categoria, Produto e Movimentação).
+ *
+ * Cada cliente é atendido em uma thread separada.
+ */
 public class Server {
 
+    // Porta fixa onde o servidor escutará as conexões
     private static final int PORTA = 1234;
 
     public static void main(String[] args) {
         try (ServerSocket server = new ServerSocket(PORTA)) {
             System.out.println("✅ Servidor iniciado na porta " + PORTA);
 
+            // Loop infinito para aceitar conexões de clientes
             while (true) {
                 Socket cliente = server.accept();
                 System.out.println("🔗 Cliente conectado: " + cliente.getInetAddress());
+
+                // Cria uma nova thread para atender cada cliente individualmente
                 new Thread(() -> atenderCliente(cliente)).start();
             }
 
         } catch (IOException e) {
+            System.err.println("💥 Erro ao iniciar o servidor: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    /**
+     * Método responsável por atender cada cliente conectado, lendo o comando
+     * enviado e executando a ação correspondente.
+     */
     private static void atenderCliente(Socket socket) {
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
 
         try {
-            // ✅ Apenas UM par de streams por conexão
+            // ✅ Criação dos streams de comunicação (apenas 1 par por cliente)
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(socket.getInputStream());
 
+            // Instancia os serviços usados pelo servidor
             CategoriaService categoriaService = new CategoriaService();
             ProdutoService produtoService = new ProdutoService();
 
-            // ✅ Lê o comando do cliente
+            // ✅ Lê o comando enviado pelo cliente
             String comando = in.readUTF();
             System.out.println("📥 Comando recebido: " + comando);
 
+            // ===================================================================
+            //                        SWITCH DE COMANDOS
+            // ===================================================================
             switch (comando) {
 
-                // ---- CATEGORIAS ----
+                // ===============================================================
+                // ---------------------- CATEGORIAS -----------------------------
+                // ===============================================================
                 case "INSERIR_CATEGORIA" -> {
                     Categoria c = (Categoria) in.readObject();
                     String resposta = categoriaService.inserir(c);
@@ -65,7 +86,6 @@ public class Server {
                         out.writeUTF("Categoria atualizada com sucesso!");
                         out.flush();
                         System.out.println("🟡 Categoria atualizada: " + categoria.getNome());
-
                     } catch (Exception e) {
                         e.printStackTrace();
                         out.writeUTF("Erro ao atualizar categoria: " + e.getMessage());
@@ -78,10 +98,10 @@ public class Server {
                         List<Categoria> lista = categoriaService.listar();
                         out.writeObject(lista);
                         out.flush();
-                        System.out.println("📤 Lista de categorias enviada com sucesso! Total: " + lista.size());
+                        System.out.println("📤 Lista de categorias enviada! Total: " + lista.size());
                     } catch (Exception e) {
                         e.printStackTrace();
-                        out.writeObject("Erro ao listar categorias: " + e.getMessage());
+                        out.writeUTF("Erro ao listar categorias: " + e.getMessage());
                         out.flush();
                     }
                 }
@@ -100,7 +120,9 @@ public class Server {
                     }
                 }
 
-                // ---- PRODUTOS ----
+                // ===============================================================
+                // ------------------------ PRODUTOS -----------------------------
+                // ===============================================================
                 case "INSERIR_PRODUTO" -> {
                     Produto p = (Produto) in.readObject();
                     String resposta = produtoService.inserir(p);
@@ -128,15 +150,40 @@ public class Server {
                         List<Produto> lista = produtoService.listar();
                         out.writeObject(lista);
                         out.flush();
-                        System.out.println("📦 Lista de produtos enviada com sucesso! Total: " + lista.size());
+                        System.out.println("📦 Lista de produtos enviada! Total: " + lista.size());
                     } catch (Exception e) {
                         e.printStackTrace();
-                        out.writeObject("Erro ao listar produtos: " + e.getMessage());
+                        out.writeUTF("Erro ao listar produtos: " + e.getMessage());
                         out.flush();
                     }
                 }
 
-                // ---- MOVIMENTAÇÕES ----
+                // ===============================================================
+                // --------------------- MOVIMENTAÇÕES ----------------------------
+                // ===============================================================
+                case "INSERIR_MOVIMENTACAO" -> {
+                    try {
+                        Movimentacao movimentacao = (Movimentacao) in.readObject();
+                        MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAO();
+
+                        // Insere a movimentação no banco
+                        String resposta = movimentacaoDAO.inserir(movimentacao);
+
+                        // Retorna a resposta ao cliente
+                        out.writeUTF(resposta);
+                        out.flush();
+
+                        System.out.println("📦 Movimentação registrada: "
+                                + movimentacao.getTipo() + " - "
+                                + movimentacao.getQuantidade()
+                                + " (Produto ID: " + movimentacao.getProduto().getId() + ")");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        out.writeUTF("Erro ao registrar movimentação: " + e.getMessage());
+                        out.flush();
+                    }
+                }
+
                 case "LISTAR_MOVIMENTACOES" -> {
                     try {
                         MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAO();
@@ -144,7 +191,8 @@ public class Server {
 
                         out.writeObject(lista);
                         out.flush();
-                        System.out.println("📈 Lista de movimentações enviada. Total: " + lista.size());
+
+                        System.out.println("Lista de movimentações enviada com sucesso. Total: " + lista.size());
                     } catch (Exception e) {
                         e.printStackTrace();
                         out.writeUTF("Erro ao listar movimentações: " + e.getMessage());
@@ -152,7 +200,9 @@ public class Server {
                     }
                 }
 
-                // ---- COMANDO INVÁLIDO ----
+                // ===============================================================
+                // ---------------------- COMANDO INVÁLIDO ------------------------
+                // ===============================================================
                 default -> {
                     out.writeUTF("ERRO: comando desconhecido");
                     out.flush();
@@ -164,6 +214,9 @@ public class Server {
             System.err.println("💥 Erro ao atender cliente: " + e.getMessage());
             e.printStackTrace();
         } finally {
+            // ===============================================================
+            // ------------------ FECHAMENTO DE CONEXÃO ------------------------
+            // ===============================================================
             try {
                 if (in != null) {
                     in.close();
