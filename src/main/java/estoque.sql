@@ -2,6 +2,7 @@
 -- BANCO DE DADOS: Sistema de Estoque (versão compatível com backend Java)
 -- ====================================================
 DROP DATABASE IF EXISTS estoque_db;
+
 CREATE DATABASE estoque_db
     DEFAULT CHARACTER SET utf8mb4
     DEFAULT COLLATE utf8mb4_general_ci;
@@ -49,17 +50,3 @@ CREATE TABLE movimentacao (
         ON DELETE CASCADE
 );
 
--- ====================================================
--- INSERINDO DADOS INICIAIS
--- ====================================================
-INSERT INTO categoria (nome, embalagem, tamanho)
-VALUES 
-('Refrigerante', 'LATA', 'MEDIO'),
-('Molho de Tomate', 'VIDRO', 'PEQUENO'),
-('Detergente', 'PLASTICO', 'GRANDE');
-
-INSERT INTO produto (nome, preco, tipo_unidade, quantidade_atual, quantidade_minima, quantidade_maxima, categoria_id)
-VALUES
-('Coca-Cola', 6.50, 'Lata 350ml', 100, 10, 200, 1),
-('Molho Tradicional', 4.20, 'Vidro 340g', 50, 5, 100, 2),
-('Detergente Neutro', 3.00, 'Frasco 500ml', 80, 10, 150, 3);
