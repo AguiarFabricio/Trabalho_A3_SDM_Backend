@@ -23,6 +23,45 @@ public class RelatorioDAO {
         return listarPorCondicao("1=1");
     }
 
+    // 🔹 NOVO MÉTODO: quantidade de produtos por categoria
+    public List<Object[]> listarQuantidadePorCategoria() {
+        List<Object[]> lista = new ArrayList<>();
+
+        String sql = """
+            SELECT 
+                c.nome AS categoria_nome,
+                COUNT(p.id) AS quantidade
+            FROM categoria c
+            LEFT JOIN produto p ON p.categoria_id = c.id
+            GROUP BY c.nome
+            ORDER BY c.nome
+        """;
+
+        try (Connection conn = ConexaoDAO.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String categoria = rs.getString("categoria_nome");
+                int quantidade = rs.getInt("quantidade");
+
+                // ✅ Proteção contra valores nulos
+                if (rs.wasNull()) {
+                    quantidade = 0;
+                }
+
+                lista.add(new Object[]{categoria, quantidade});
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Erro ao gerar relatório de quantidade por categoria: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
+    // 🔹 Método reutilizado pelos outros relatórios
     private List<Produto> listarPorCondicao(String condicao) {
         List<Produto> lista = new ArrayList<>();
 

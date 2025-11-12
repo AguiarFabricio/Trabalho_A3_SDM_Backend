@@ -4,11 +4,13 @@ import dao.MovimentacaoDAO;
 import java.io.*;
 import java.net.*;
 import java.util.List;
+import java.util.Map;
 import model.Categoria;
 import model.Movimentacao;
 import model.Produto;
 import service.CategoriaService;
 import service.ProdutoService;
+import service.RelatorioService;
 
 /**
  * Servidor principal responsável por gerenciar conexões de clientes e executar
@@ -47,7 +49,6 @@ public class Server {
     private static void atenderCliente(Socket socket) {
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
-
         try {
             // ✅ Criação dos streams de comunicação (apenas 1 par por cliente)
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -57,6 +58,7 @@ public class Server {
             // Instancia os serviços usados pelo servidor
             CategoriaService categoriaService = new CategoriaService();
             ProdutoService produtoService = new ProdutoService();
+            RelatorioService relatorioService = new RelatorioService();
 
             // ✅ Lê o comando enviado pelo cliente
             String comando = in.readUTF();
@@ -201,6 +203,34 @@ public class Server {
                 }
 
                 // ===============================================================
+                // --------------------- RELATÓRIOS ------------------------------
+                // ===============================================================
+                case "RELATORIO_LISTA_PRECOS", "RELATORIO_LISTA_PREC" -> {
+                    List<Map<String, Object>> lista = relatorioService.listarPrecos();
+                    enviarListaComoTexto(out, lista);
+                }
+
+                case "RELATORIO_BALANCO" -> {
+                    List<Map<String, Object>> lista = relatorioService.balancoFisicoFinanceiro();
+                    enviarListaComoTexto(out, lista);
+                }
+
+                case "RELATORIO_ABAIXO_MINIMO", "RELATORIO_ABAIXO_MIN" -> {
+                    List<Map<String, Object>> lista = relatorioService.produtosAbaixoDoMinimo();
+                    enviarListaComoTexto(out, lista);
+                }
+
+                case "RELATORIO_QTD_POR_CATEGORIA", "RELATORIO_QTD_CAT" -> {
+                    List<Map<String, Object>> lista = relatorioService.quantidadePorCategoria();
+                    enviarListaComoTexto(out, lista);
+                }
+
+                case "RELATORIO_MAIS_MOVIMENTADO", "RELATORIO_MAIS_MOV" -> {
+                    List<Map<String, Object>> lista = relatorioService.produtoMaisMovimentado();
+                    enviarListaComoTexto(out, lista);
+                }
+
+                // ===============================================================
                 // ---------------------- COMANDO INVÁLIDO ------------------------
                 // ===============================================================
                 default -> {
@@ -218,18 +248,27 @@ public class Server {
             // ------------------ FECHAMENTO DE CONEXÃO ------------------------
             // ===============================================================
             try {
-                if (in != null) {
-                    in.close();
-                }
-                if (out != null) {
-                    out.close();
-                }
-                if (socket != null) {
-                    socket.close();
-                }
+                if (in != null) in.close();
+                if (out != null) out.close();
+                if (socket != null) socket.close();
                 System.out.println("🔒 Conexão encerrada com o cliente.\n");
             } catch (IOException ignored) {
             }
         }
+    }
+
+    /**
+     * Método auxiliar para converter Map<Object,Object> em texto e enviar via socket.
+     */
+    private static void enviarListaComoTexto(ObjectOutputStream out, List<Map<String, Object>> lista) throws IOException {
+        out.writeObject(lista.stream()
+                .map(map -> map.entrySet().stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> (e.getValue() != null ? e.getValue().toString() : "")
+                        )))
+                .toList());
+        out.flush();
+        System.out.println("📊 Relatório enviado com sucesso! Total de registros: " + lista.size());
     }
 }
