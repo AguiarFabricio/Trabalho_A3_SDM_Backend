@@ -8,12 +8,42 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Classe responsável por realizar operações de acesso e manipulação dos dados da entidade
+ * {@link Movimentacao} no banco de dados.
+ * <p>
+ * Implementa operações de inserção e consultas diversas relacionadas às movimentações
+ * de produtos (entradas e saídas) no estoque. Todas as conexões são obtidas através da
+ * classe {@link ConexaoDAO}.
+ * </p>
+ * 
+ * <p><b>Funções principais:</b></p>
+ * <ul>
+ *     <li>Registrar novas movimentações (entrada ou saída)</li>
+ *     <li>Listar todas as movimentações realizadas</li>
+ *     <li>Filtrar movimentações por produto ou por tipo</li>
+ * </ul>
+ * 
+ * @author Luiz
+ * @version 1.0
+ */
 public class MovimentacaoDAO {
 
+    /**
+     * Insere uma nova movimentação no banco de dados.
+     * <p>
+     * Registra as informações do produto, tipo de movimentação, quantidade e data.
+     * </p>
+     *
+     * @param mov objeto {@link Movimentacao} contendo os dados da movimentação
+     * @return mensagem de sucesso ou erro referente ao resultado da operação
+     * @throws SQLException caso ocorra erro de comunicação com o banco de dados
+     */
     public String inserir(Movimentacao mov) {
         String sql = "INSERT INTO movimentacao (produto_id, tipo, quantidade, data_movimentacao) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, mov.getProduto().getId());
             stmt.setString(2, mov.getTipo());
@@ -29,6 +59,16 @@ public class MovimentacaoDAO {
         }
     }
 
+    /**
+     * Retorna uma lista contendo todas as movimentações registradas no banco de dados.
+     * <p>
+     * A consulta retorna também os dados associados do {@link Produto} e da {@link Categoria}
+     * correspondente, ordenados pela data da movimentação (mais recente primeiro).
+     * </p>
+     *
+     * @return lista de objetos {@link Movimentacao} com seus respectivos produtos e categorias
+     * @throws SQLException caso ocorra erro de comunicação com o banco de dados
+     */
     public List<Movimentacao> listar() {
         List<Movimentacao> lista = new ArrayList<>();
         String sql = """
@@ -42,7 +82,9 @@ public class MovimentacaoDAO {
             ORDER BY m.data_movimentacao DESC
         """;
 
-        try (Connection conn = ConexaoDAO.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 // Categoria
@@ -79,11 +121,19 @@ public class MovimentacaoDAO {
         return lista;
     }
 
+    /**
+     * Retorna todas as movimentações associadas a um determinado produto.
+     *
+     * @param produtoId identificador do produto cujas movimentações serão buscadas
+     * @return lista de objetos {@link Movimentacao} do produto informado
+     * @throws SQLException caso ocorra erro de comunicação com o banco de dados
+     */
     public List<Movimentacao> listarPorProduto(int produtoId) {
         List<Movimentacao> lista = new ArrayList<>();
         String sql = "SELECT * FROM movimentacao WHERE produto_id = ? ORDER BY data_movimentacao DESC";
 
-        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, produtoId);
             ResultSet rs = stmt.executeQuery();
@@ -105,11 +155,22 @@ public class MovimentacaoDAO {
         return lista;
     }
 
+    /**
+     * Retorna todas as movimentações filtradas por tipo.
+     * <p>
+     * O tipo normalmente indica se a movimentação foi uma <b>entrada</b> ou <b>saída</b> de estoque.
+     * </p>
+     *
+     * @param tipo tipo da movimentação (ex: "entrada" ou "saída")
+     * @return lista de objetos {@link Movimentacao} correspondentes ao tipo informado
+     * @throws SQLException caso ocorra erro de comunicação com o banco de dados
+     */
     public List<Movimentacao> listarPorTipo(String tipo) {
         List<Movimentacao> lista = new ArrayList<>();
         String sql = "SELECT * FROM movimentacao WHERE tipo = ? ORDER BY data_movimentacao DESC";
 
-        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, tipo);
             ResultSet rs = stmt.executeQuery();

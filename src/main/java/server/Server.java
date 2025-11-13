@@ -13,26 +13,58 @@ import service.ProdutoService;
 import service.RelatorioService;
 
 /**
- * Servidor principal responsável por gerenciar conexões de clientes e executar
- * comandos recebidos (Categoria, Produto e Movimentação).
+ * Classe {@code Server} responsável por gerenciar as conexões de clientes
+ * e processar os comandos recebidos relacionados a {@link Categoria},
+ * {@link Produto}, {@link Movimentacao} e relatórios de estoque.
+ * <p>
+ * Este servidor utiliza comunicação via {@link Socket} e opera na porta
+ * {@value #PORTA}. Cada cliente conectado é atendido por uma <b>thread</b>
+ * separada, garantindo processamento paralelo e não bloqueante.
+ * </p>
  *
- * Cada cliente é atendido em uma thread separada.
+ * <p><b>Principais funcionalidades:</b></p>
+ * <ul>
+ *     <li>Gerenciamento de categorias (CRUD)</li>
+ *     <li>Gerenciamento de produtos (CRUD)</li>
+ *     <li>Registro e listagem de movimentações de estoque</li>
+ *     <li>Geração de relatórios de controle e análise</li>
+ * </ul>
+ *
+ * <p>O servidor se comunica com os serviços da camada {@code service}
+ * e utiliza os DAOs para persistência no banco de dados.</p>
+ *
+ * <p>Exemplo de inicialização:</p>
+ * <pre>{@code
+ *     java server.Server
+ * }</pre>
+ *
+ * @author Luiz
+ * @version 1.0
+ * @since 2025
  */
 public class Server {
 
-    // Porta fixa onde o servidor escutará as conexões
+    /** Porta fixa onde o servidor ficará escutando as conexões dos clientes. */
     private static final int PORTA = 1234;
 
+    /**
+     * Método principal responsável por inicializar o servidor e aceitar conexões.
+     * <p>
+     * Cada nova conexão de cliente é tratada em uma thread independente.
+     * </p>
+     *
+     * @param args argumentos de inicialização (não utilizados).
+     */
     public static void main(String[] args) {
         try (ServerSocket server = new ServerSocket(PORTA)) {
             System.out.println("✅ Servidor iniciado na porta " + PORTA);
 
-            // Loop infinito para aceitar conexões de clientes
+            // Aceita conexões indefinidamente
             while (true) {
                 Socket cliente = server.accept();
                 System.out.println("🔗 Cliente conectado: " + cliente.getInetAddress());
 
-                // Cria uma nova thread para atender cada cliente individualmente
+                // Cria uma nova thread para atender o cliente
                 new Thread(() -> atenderCliente(cliente)).start();
             }
 
@@ -43,34 +75,45 @@ public class Server {
     }
 
     /**
-     * Método responsável por atender cada cliente conectado, lendo o comando
-     * enviado e executando a ação correspondente.
+     * Atende um cliente específico conectado ao servidor.
+     * <p>
+     * Este método é executado dentro de uma thread separada para cada cliente,
+     * garantindo concorrência e isolamento entre as conexões.
+     * </p>
+     *
+     * <p>Responsável por:</p>
+     * <ul>
+     *     <li>Ler o comando enviado pelo cliente</li>
+     *     <li>Executar a ação correspondente (via camada service ou DAO)</li>
+     *     <li>Enviar a resposta de volta ao cliente</li>
+     * </ul>
+     *
+     * @param socket o {@link Socket} de comunicação com o cliente.
      */
     private static void atenderCliente(Socket socket) {
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
         try {
-            // ✅ Criação dos streams de comunicação (apenas 1 par por cliente)
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(socket.getInputStream());
 
-            // Instancia os serviços usados pelo servidor
+            // Instancia os serviços necessários
             CategoriaService categoriaService = new CategoriaService();
             ProdutoService produtoService = new ProdutoService();
             RelatorioService relatorioService = new RelatorioService();
 
-            // ✅ Lê o comando enviado pelo cliente
+            // Lê o comando textual enviado pelo cliente
             String comando = in.readUTF();
             System.out.println("📥 Comando recebido: " + comando);
 
             // ===================================================================
-            //                        SWITCH DE COMANDOS
+            //                  INTERPRETAÇÃO E EXECUÇÃO DOS COMANDOS
             // ===================================================================
             switch (comando) {
 
                 // ===============================================================
-                // ---------------------- CATEGORIAS -----------------------------
+                // ------------------------- CATEGORIAS --------------------------
                 // ===============================================================
                 case "INSERIR_CATEGORIA" -> {
                     Categoria c = (Categoria) in.readObject();
@@ -84,7 +127,6 @@ public class Server {
                     try {
                         Categoria categoria = (Categoria) in.readObject();
                         categoriaService.atualizar(categoria);
-
                         out.writeUTF("Categoria atualizada com sucesso!");
                         out.flush();
                         System.out.println("🟡 Categoria atualizada: " + categoria.getNome());
@@ -123,7 +165,7 @@ public class Server {
                 }
 
                 // ===============================================================
-                // ------------------------ PRODUTOS -----------------------------
+                // --------------------------- PRODUTOS --------------------------
                 // ===============================================================
                 case "INSERIR_PRODUTO" -> {
                     Produto p = (Produto) in.readObject();
@@ -161,17 +203,14 @@ public class Server {
                 }
 
                 // ===============================================================
-                // --------------------- MOVIMENTAÇÕES ----------------------------
+                // ------------------------ MOVIMENTAÇÕES ------------------------
                 // ===============================================================
                 case "INSERIR_MOVIMENTACAO" -> {
                     try {
                         Movimentacao movimentacao = (Movimentacao) in.readObject();
                         MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAO();
 
-                        // Insere a movimentação no banco
                         String resposta = movimentacaoDAO.inserir(movimentacao);
-
-                        // Retorna a resposta ao cliente
                         out.writeUTF(resposta);
                         out.flush();
 
@@ -190,10 +229,8 @@ public class Server {
                     try {
                         MovimentacaoDAO movimentacaoDAO = new MovimentacaoDAO();
                         List<Movimentacao> lista = movimentacaoDAO.listar();
-
                         out.writeObject(lista);
                         out.flush();
-
                         System.out.println("Lista de movimentações enviada com sucesso. Total: " + lista.size());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -203,7 +240,7 @@ public class Server {
                 }
 
                 // ===============================================================
-                // --------------------- RELATÓRIOS ------------------------------
+                // -------------------------- RELATÓRIOS -------------------------
                 // ===============================================================
                 case "RELATORIO_LISTA_PRECOS", "RELATORIO_LISTA_PREC" -> {
                     List<Map<String, Object>> lista = relatorioService.listarPrecos();
@@ -230,9 +267,6 @@ public class Server {
                     enviarListaComoTexto(out, lista);
                 }
 
-                // ===============================================================
-                // ---------------------- COMANDO INVÁLIDO ------------------------
-                // ===============================================================
                 default -> {
                     out.writeUTF("ERRO: comando desconhecido");
                     out.flush();
@@ -244,30 +278,31 @@ public class Server {
             System.err.println("💥 Erro ao atender cliente: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // ===============================================================
-            // ------------------ FECHAMENTO DE CONEXÃO ------------------------
-            // ===============================================================
             try {
                 if (in != null) in.close();
                 if (out != null) out.close();
                 if (socket != null) socket.close();
                 System.out.println("🔒 Conexão encerrada com o cliente.\n");
-            } catch (IOException ignored) {
-            }
+            } catch (IOException ignored) { }
         }
     }
 
     /**
-     * Método auxiliar para converter Map<Object,Object> em texto e enviar via socket.
+     * Envia uma lista de registros (normalmente de relatórios) convertendo seus
+     * valores para texto antes de transmitir ao cliente.
+     *
+     * @param out   o {@link ObjectOutputStream} usado para enviar dados ao cliente.
+     * @param lista a lista de mapas contendo os dados do relatório.
+     * @throws IOException se ocorrer erro de I/O durante o envio.
      */
-    private static void enviarListaComoTexto(ObjectOutputStream out, List<Map<String, Object>> lista) throws IOException {
+    private static void enviarListaComoTexto(ObjectOutputStream out, List<Map<String, Object>> lista)
+            throws IOException {
         out.writeObject(lista.stream()
                 .map(map -> map.entrySet().stream()
                         .collect(java.util.stream.Collectors.toMap(
                                 Map.Entry::getKey,
                                 e -> (e.getValue() != null ? e.getValue().toString() : "")
-                        )))
-                .toList());
+                        ))).toList());
         out.flush();
         System.out.println("📊 Relatório enviado com sucesso! Total de registros: " + lista.size());
     }

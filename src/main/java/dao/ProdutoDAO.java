@@ -9,8 +9,39 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Classe responsável por executar operações de acesso e manipulação dos dados da entidade
+ * {@link Produto} no banco de dados.
+ * <p>
+ * Esta classe implementa métodos CRUD (Create, Read, Update) para o gerenciamento de produtos,
+ * incluindo o relacionamento com {@link Categoria}.
+ * Todas as conexões são estabelecidas por meio da classe {@link ConexaoDAO}.
+ * </p>
+ * 
+ * <p><b>Principais operações:</b></p>
+ * <ul>
+ *     <li>Inserção de novos produtos</li>
+ *     <li>Listagem de produtos com suas categorias associadas</li>
+ *     <li>Atualização de informações de produtos existentes</li>
+ * </ul>
+ * 
+ * @author Luiz
+ * @version 1.0
+ */
 public class ProdutoDAO {
 
+    /**
+     * Insere um novo produto no banco de dados.
+     * <p>
+     * O método registra um novo produto com seus respectivos atributos e a categoria
+     * vinculada. Em caso de sucesso, retorna uma mensagem descritiva; caso contrário,
+     * retorna o erro ocorrido.
+     * </p>
+     *
+     * @param produto objeto {@link Produto} contendo os dados a serem inseridos
+     * @return mensagem indicando o sucesso ou falha da operação
+     * @throws SQLException caso ocorra erro de comunicação com o banco de dados
+     */
     public String inserir(Produto produto) {
         String sql = """
             INSERT INTO produto 
@@ -38,6 +69,17 @@ public class ProdutoDAO {
         }
     }
 
+    /**
+     * Retorna uma lista contendo todos os produtos cadastrados, juntamente com as informações
+     * de suas categorias correspondentes.
+     * <p>
+     * O método realiza junção (JOIN) com a tabela de categorias para trazer também os dados
+     * de embalagem e tamanho da categoria associada a cada produto.
+     * </p>
+     *
+     * @return lista de objetos {@link Produto} com seus respectivos dados e categorias
+     * @throws SQLException caso ocorra erro de comunicação com o banco de dados
+     */
     public List<Produto> listar() {
         List<Produto> lista = new ArrayList<>();
 
@@ -62,7 +104,7 @@ public class ProdutoDAO {
                 cat.setId(rs.getInt("categoria_id"));
                 cat.setNome(rs.getString("categoria_nome"));
 
-                // Converter as Strings em enums (de forma segura)
+                // Conversão segura de strings em enums
                 try {
                     cat.setEmbalagem(EmbalagemProduto.valueOf(rs.getString("categoria_embalagem")));
                 } catch (Exception ex) {
@@ -96,6 +138,16 @@ public class ProdutoDAO {
         return lista;
     }
 
+    /**
+     * Atualiza as informações de um produto existente no banco de dados.
+     * <p>
+     * O método substitui os valores atuais pelos novos informados no objeto {@link Produto},
+     * incluindo o vínculo com a categoria correspondente.
+     * </p>
+     *
+     * @param produto objeto {@link Produto} contendo os novos dados
+     * @throws SQLException caso ocorra erro de comunicação com o banco de dados
+     */
     public void atualizar(Produto produto) {
         String sql = """
             UPDATE produto
