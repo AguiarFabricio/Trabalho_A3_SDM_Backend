@@ -36,5 +36,16 @@
 * *RNF004* – O código-fonte do sistema deve seguir uma *estrutura modular*, com boas práticas de organização, legibilidade e documentação adequada nas classes e métodos.
 * *RNF005* – O projeto deve utilizar *controle de versão com Git, mantendo o repositório no **GitHub*, com contribuições registradas de forma colaborativa por todos os membros da equipe.
 
+## 💻 Tecnologias Utilizadas
+
+Ambiente de Desenvolvimento:
+O projeto foi desenvolvido em ambiente local utilizando as seguintes ferramentas e tecnologias:
+*  IDE: Apache NetBeans 27
+*  Banco de Dados: MySQL Server 9.4.0
+*  Versão do Java: Java 25
+*  Sistema Operacional: Windows 10/11
+*  Controle de Versão: Git 2.44.0, com repositório hospedado no GitHub
+*  Arquitetura: Estrutura distribuída em duas camadas (serviços e consumo de serviços), com comunicação via Sockets.
+
 ## Repositório Frontend:
 https://github.com/AguiarFabricio/Trabalho_A3_SDM_Frontend
