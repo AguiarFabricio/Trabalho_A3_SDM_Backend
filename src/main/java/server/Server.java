@@ -13,8 +13,8 @@ import service.ProdutoService;
 import service.RelatorioService;
 
 /**
- * Classe {@code Server} responsável por gerenciar as conexões de clientes
- * e processar os comandos recebidos relacionados a {@link Categoria},
+ * Classe {@code Server} responsável por gerenciar as conexões de clientes e
+ * processar os comandos recebidos relacionados a {@link Categoria},
  * {@link Produto}, {@link Movimentacao} e relatórios de estoque.
  * <p>
  * Este servidor utiliza comunicação via {@link Socket} e opera na porta
@@ -22,18 +22,21 @@ import service.RelatorioService;
  * separada, garantindo processamento paralelo e não bloqueante.
  * </p>
  *
- * <p><b>Principais funcionalidades:</b></p>
+ * <p>
+ * <b>Principais funcionalidades:</b></p>
  * <ul>
- *     <li>Gerenciamento de categorias (CRUD)</li>
- *     <li>Gerenciamento de produtos (CRUD)</li>
- *     <li>Registro e listagem de movimentações de estoque</li>
- *     <li>Geração de relatórios de controle e análise</li>
+ * <li>Gerenciamento de categorias (CRUD)</li>
+ * <li>Gerenciamento de produtos (CRUD)</li>
+ * <li>Registro e listagem de movimentações de estoque</li>
+ * <li>Geração de relatórios de controle e análise</li>
  * </ul>
  *
- * <p>O servidor se comunica com os serviços da camada {@code service}
- * e utiliza os DAOs para persistência no banco de dados.</p>
+ * <p>
+ * O servidor se comunica com os serviços da camada {@code service} e utiliza os
+ * DAOs para persistência no banco de dados.</p>
  *
- * <p>Exemplo de inicialização:</p>
+ * <p>
+ * Exemplo de inicialização:</p>
  * <pre>{@code
  *     java server.Server
  * }</pre>
@@ -44,11 +47,14 @@ import service.RelatorioService;
  */
 public class Server {
 
-    /** Porta fixa onde o servidor ficará escutando as conexões dos clientes. */
+    /**
+     * Porta fixa onde o servidor ficará escutando as conexões dos clientes.
+     */
     private static final int PORTA = 1234;
 
     /**
-     * Método principal responsável por inicializar o servidor e aceitar conexões.
+     * Método principal responsável por inicializar o servidor e aceitar
+     * conexões.
      * <p>
      * Cada nova conexão de cliente é tratada em uma thread independente.
      * </p>
@@ -81,11 +87,12 @@ public class Server {
      * garantindo concorrência e isolamento entre as conexões.
      * </p>
      *
-     * <p>Responsável por:</p>
+     * <p>
+     * Responsável por:</p>
      * <ul>
-     *     <li>Ler o comando enviado pelo cliente</li>
-     *     <li>Executar a ação correspondente (via camada service ou DAO)</li>
-     *     <li>Enviar a resposta de volta ao cliente</li>
+     * <li>Ler o comando enviado pelo cliente</li>
+     * <li>Executar a ação correspondente (via camada service ou DAO)</li>
+     * <li>Enviar a resposta de volta ao cliente</li>
      * </ul>
      *
      * @param socket o {@link Socket} de comunicação com o cliente.
@@ -173,6 +180,24 @@ public class Server {
                     out.writeUTF(resposta);
                     out.flush();
                     System.out.println("🟢 Produto inserido: " + p.getNome());
+                }
+
+                case "EXCLUIR_PRODUTO" -> {
+                    try {
+                        Produto produto = (Produto) in.readObject(); // recebe o Produto
+                        Integer idProduto = produto.getId();        // extrai o ID
+
+                        String resposta = produtoService.excluir(idProduto);
+
+                        out.writeUTF(resposta);
+                        out.flush();
+
+                        System.out.println("🗑️ Produto excluído: ID " + idProduto);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        out.writeUTF("Erro ao excluir produto: " + e.getMessage());
+                        out.flush();
+                    }
                 }
 
                 case "ALTERAR_PRODUTO" -> {
@@ -279,11 +304,18 @@ public class Server {
             e.printStackTrace();
         } finally {
             try {
-                if (in != null) in.close();
-                if (out != null) out.close();
-                if (socket != null) socket.close();
+                if (in != null) {
+                    in.close();
+                }
+                if (out != null) {
+                    out.close();
+                }
+                if (socket != null) {
+                    socket.close();
+                }
                 System.out.println("🔒 Conexão encerrada com o cliente.\n");
-            } catch (IOException ignored) { }
+            } catch (IOException ignored) {
+            }
         }
     }
 
@@ -291,7 +323,8 @@ public class Server {
      * Envia uma lista de registros (normalmente de relatórios) convertendo seus
      * valores para texto antes de transmitir ao cliente.
      *
-     * @param out   o {@link ObjectOutputStream} usado para enviar dados ao cliente.
+     * @param out o {@link ObjectOutputStream} usado para enviar dados ao
+     * cliente.
      * @param lista a lista de mapas contendo os dados do relatório.
      * @throws IOException se ocorrer erro de I/O durante o envio.
      */
@@ -299,10 +332,10 @@ public class Server {
             throws IOException {
         out.writeObject(lista.stream()
                 .map(map -> map.entrySet().stream()
-                        .collect(java.util.stream.Collectors.toMap(
-                                Map.Entry::getKey,
-                                e -> (e.getValue() != null ? e.getValue().toString() : "")
-                        ))).toList());
+                .collect(java.util.stream.Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> (e.getValue() != null ? e.getValue().toString() : "")
+                ))).toList());
         out.flush();
         System.out.println("📊 Relatório enviado com sucesso! Total de registros: " + lista.size());
     }

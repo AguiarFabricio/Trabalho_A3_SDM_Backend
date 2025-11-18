@@ -10,21 +10,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Classe responsável por executar operações de acesso e manipulação dos dados da entidade
- * {@link Produto} no banco de dados.
+ * Classe responsável por executar operações de acesso e manipulação dos dados
+ * da entidade {@link Produto} no banco de dados.
  * <p>
- * Esta classe implementa métodos CRUD (Create, Read, Update) para o gerenciamento de produtos,
- * incluindo o relacionamento com {@link Categoria}.
+ * Esta classe implementa métodos CRUD (Create, Read, Update) para o
+ * gerenciamento de produtos, incluindo o relacionamento com {@link Categoria}.
  * Todas as conexões são estabelecidas por meio da classe {@link ConexaoDAO}.
  * </p>
- * 
- * <p><b>Principais operações:</b></p>
+ *
+ * <p>
+ * <b>Principais operações:</b></p>
  * <ul>
- *     <li>Inserção de novos produtos</li>
- *     <li>Listagem de produtos com suas categorias associadas</li>
- *     <li>Atualização de informações de produtos existentes</li>
+ * <li>Inserção de novos produtos</li>
+ * <li>Listagem de produtos com suas categorias associadas</li>
+ * <li>Atualização de informações de produtos existentes</li>
  * </ul>
- * 
+ *
  * @author Luiz
  * @version 1.0
  */
@@ -33,9 +34,9 @@ public class ProdutoDAO {
     /**
      * Insere um novo produto no banco de dados.
      * <p>
-     * O método registra um novo produto com seus respectivos atributos e a categoria
-     * vinculada. Em caso de sucesso, retorna uma mensagem descritiva; caso contrário,
-     * retorna o erro ocorrido.
+     * O método registra um novo produto com seus respectivos atributos e a
+     * categoria vinculada. Em caso de sucesso, retorna uma mensagem descritiva;
+     * caso contrário, retorna o erro ocorrido.
      * </p>
      *
      * @param produto objeto {@link Produto} contendo os dados a serem inseridos
@@ -49,8 +50,7 @@ public class ProdutoDAO {
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
 
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, produto.getNome());
             stmt.setDouble(2, produto.getPreco());
@@ -70,14 +70,16 @@ public class ProdutoDAO {
     }
 
     /**
-     * Retorna uma lista contendo todos os produtos cadastrados, juntamente com as informações
-     * de suas categorias correspondentes.
+     * Retorna uma lista contendo todos os produtos cadastrados, juntamente com
+     * as informações de suas categorias correspondentes.
      * <p>
-     * O método realiza junção (JOIN) com a tabela de categorias para trazer também os dados
-     * de embalagem e tamanho da categoria associada a cada produto.
+     * O método realiza junção (JOIN) com a tabela de categorias para trazer
+     * também os dados de embalagem e tamanho da categoria associada a cada
+     * produto.
      * </p>
      *
-     * @return lista de objetos {@link Produto} com seus respectivos dados e categorias
+     * @return lista de objetos {@link Produto} com seus respectivos dados e
+     * categorias
      * @throws SQLException caso ocorra erro de comunicação com o banco de dados
      */
     public List<Produto> listar() {
@@ -95,9 +97,7 @@ public class ProdutoDAO {
             JOIN categoria c ON p.categoria_id = c.id
         """;
 
-        try (Connection conn = ConexaoDAO.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 Categoria cat = new Categoria();
@@ -118,14 +118,14 @@ public class ProdutoDAO {
                 }
 
                 Produto p = new Produto(
-                    rs.getInt("id"),
-                    rs.getString("nome"),
-                    rs.getDouble("preco"),
-                    rs.getString("tipo_unidade"),
-                    rs.getInt("quantidade_atual"),
-                    rs.getInt("quantidade_minima"),
-                    rs.getInt("quantidade_maxima"),
-                    cat
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getDouble("preco"),
+                        rs.getString("tipo_unidade"),
+                        rs.getInt("quantidade_atual"),
+                        rs.getInt("quantidade_minima"),
+                        rs.getInt("quantidade_maxima"),
+                        cat
                 );
 
                 lista.add(p);
@@ -141,8 +141,8 @@ public class ProdutoDAO {
     /**
      * Atualiza as informações de um produto existente no banco de dados.
      * <p>
-     * O método substitui os valores atuais pelos novos informados no objeto {@link Produto},
-     * incluindo o vínculo com a categoria correspondente.
+     * O método substitui os valores atuais pelos novos informados no objeto
+     * {@link Produto}, incluindo o vínculo com a categoria correspondente.
      * </p>
      *
      * @param produto objeto {@link Produto} contendo os novos dados
@@ -156,8 +156,7 @@ public class ProdutoDAO {
             WHERE id=?
         """;
 
-        try (Connection conn = ConexaoDAO.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, produto.getNome());
             stmt.setDouble(2, produto.getPreco());
@@ -176,4 +175,31 @@ public class ProdutoDAO {
             System.out.println("Erro ao atualizar produto: " + e.getMessage());
         }
     }
+
+    /**
+     * Exclui um produto pelo ID.
+     *
+     * @param id o ID do produto a ser excluído
+     * @return mensagem de sucesso ou erro
+     */
+    public String excluir(Integer id) {
+        String sql = "DELETE FROM produto WHERE id = ?";
+
+        try (Connection conn = ConexaoDAO.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            int linhasAfetadas = stmt.executeUpdate();
+
+            if (linhasAfetadas > 0) {
+                return "Produto excluído com sucesso!";
+            } else {
+                return "Nenhum produto encontrado com o ID informado.";
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Erro ao excluir produto: " + e.getMessage();
+        }
+    }
+
 }
