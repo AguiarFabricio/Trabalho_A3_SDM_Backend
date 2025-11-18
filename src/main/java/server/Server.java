@@ -159,11 +159,18 @@ public class Server {
 
                 case "EXCLUIR_CATEGORIA" -> {
                     try {
-                        Integer idCategoria = (Integer) in.readObject();
-                        String resposta = categoriaService.excluir(idCategoria);
+                        Integer id = (Integer) in.readObject();
+                        String resposta = categoriaService.excluir(id);
+
                         out.writeUTF(resposta);
                         out.flush();
-                        System.out.println("🗑️ Categoria excluída: ID " + idCategoria);
+
+                        if (resposta.contains("sucesso")) {
+                            System.out.println("🗑️ Categoria excluída: ID " + id);
+                        } else {
+                            System.out.println("❌ Falha ao excluir categoria: ID " + id);
+                        }
+
                     } catch (Exception e) {
                         e.printStackTrace();
                         out.writeUTF("Erro ao excluir categoria: " + e.getMessage());

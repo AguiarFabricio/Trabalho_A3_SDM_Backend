@@ -9,18 +9,22 @@ import java.util.List;
  * e realizar o gerenciamento das operações relacionadas à entidade
  * {@link model.Categoria}.
  *
- * <p>Esta classe funciona como intermediária entre a camada de controle
- * (servidor ou interface cliente) e a camada de persistência ({@link dao.CategoriaDAO}).</p>
- *
- * <p><b>Principais responsabilidades:</b></p>
+ * <p>Atua como uma camada intermediária entre:</p>
  * <ul>
- *   <li>Validar os dados antes de enviar ao DAO</li>
- *   <li>Tratar exceções de forma amigável</li>
- *   <li>Retornar mensagens de status padronizadas para o servidor</li>
+ *     <li><b>Camada de controle</b> — servidor ou interface Swing (Cliente Socket)</li>
+ *     <li><b>Camada de persistência</b> — {@link dao.CategoriaDAO}</li>
  * </ul>
  *
- * <p>Todos os métodos de operação retornam mensagens ou objetos de domínio,
- * evitando que exceções não tratadas cheguem à camada de controle.</p>
+ * <p>Suas principais funções incluem:</p>
+ * <ul>
+ *     <li>Validar dados recebidos do cliente;</li>
+ *     <li>Delegar chamadas ao DAO;</li>
+ *     <li>Retornar mensagens padronizadas ao servidor;</li>
+ *     <li>Evitar que exceções "estourem" para outras camadas.</li>
+ * </ul>
+ *
+ * <p>A ideia é manter o servidor simples, deixando para o service
+ * as validações e regras necessárias.</p>
  *
  * @author Luiz
  * @version 1.0
@@ -49,10 +53,13 @@ public class CategoriaService {
      *         </ul>
      */
     public String inserir(Categoria categoria) {
+
+        // 🔍 Verifica se o objeto veio nulo
         if (categoria == null) {
             return "ERRO: Categoria nula.";
         }
 
+        // 🔍 Valida nome obrigatório
         if (categoria.getNome() == null || categoria.getNome().isEmpty()) {
             return "ERRO: Nome da categoria não pode ser vazio.";
         }
@@ -61,6 +68,8 @@ public class CategoriaService {
             categoriaDAO.inserir(categoria);
             return "OK: Categoria inserida com sucesso!";
         } catch (Exception e) {
+
+            // Imprime stack trace para debug, mas envia retorno limpo ao cliente
             e.printStackTrace();
             return "ERRO ao inserir categoria: " + e.getMessage();
         }
@@ -69,7 +78,7 @@ public class CategoriaService {
     /**
      * Retorna uma lista com todas as categorias cadastradas.
      *
-     * @return uma {@link List} de {@link Categoria}, ou uma lista vazia se ocorrer erro.
+     * @return uma {@link List} de {@link Categoria}, ou lista vazia se ocorrer erro.
      */
     public List<Categoria> listar() {
         try {
@@ -77,7 +86,9 @@ public class CategoriaService {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("ERRO ao listar categorias: " + e.getMessage());
-            return List.of(); // Retorna lista vazia em caso de erro
+
+            // Evita null pointer no cliente retornando lista vazia
+            return List.of();
         }
     }
 
@@ -85,9 +96,11 @@ public class CategoriaService {
      * Busca uma categoria específica pelo seu identificador (ID).
      *
      * @param id identificador único da categoria.
-     * @return a {@link Categoria} correspondente, ou {@code null} se não encontrada ou se o ID for inválido.
+     * @return a {@link Categoria} correspondente, ou {@code null} se não encontrada.
      */
     public Categoria buscarPorId(int id) {
+
+        // Validação básica do ID
         if (id <= 0) {
             System.out.println("ID inválido.");
             return null;
@@ -95,12 +108,16 @@ public class CategoriaService {
 
         try {
             List<Categoria> lista = categoriaDAO.listar();
+
+            // 🔎 Procura manualmente na lista retornada
             for (Categoria c : lista) {
                 if (c.getId() == id) {
                     return c;
                 }
             }
+
             System.out.println("Nenhuma categoria encontrada com o ID: " + id);
+
         } catch (Exception e) {
             System.out.println("Erro ao buscar categoria: " + e.getMessage());
         }
@@ -109,16 +126,18 @@ public class CategoriaService {
     }
 
     /**
-     * Atualiza as informações de uma categoria existente no banco de dados.
+     * Atualiza as informações de uma categoria existente.
      *
      * @param categoria objeto {@link Categoria} contendo os dados atualizados.
-     * @return mensagem de status da operação:
+     * @return mensagem de status:
      *         <ul>
-     *             <li>{@code "OK: Categoria atualizada com sucesso!"} se bem-sucedida;</li>
-     *             <li>{@code "ERRO: ..."} em caso de falha ou validação incorreta.</li>
+     *             <li>{@code "OK: Categoria atualizada com sucesso!"}</li>
+     *             <li>{@code "ERRO: ..."} em caso de falha</li>
      *         </ul>
      */
     public String atualizar(Categoria categoria) {
+
+        // Validação do objeto e do ID
         if (categoria == null || categoria.getId() <= 0) {
             return "ERRO: Categoria inválida para atualização.";
         }
@@ -133,16 +152,17 @@ public class CategoriaService {
     }
 
     /**
-     * Exclui uma categoria do banco de dados com base no seu ID.
+     * Exclui uma categoria do banco pelo seu ID.
      *
-     * @param id identificador da categoria a ser removida.
-     * @return mensagem de status da operação:
-     *         <ul>
-     *             <li>{@code "OK: Categoria excluída com sucesso!"} se exclusão ocorrer normalmente;</li>
-     *             <li>{@code "ERRO: ..."} se o ID for inválido ou ocorrer exceção.</li>
-     *         </ul>
+     * <p>O DAO já contém validação que impede excluir categorias
+     * que possuem produtos associados.</p>
+     *
+     * @param id identificador da categoria.
+     * @return mensagem de status padronizada.
      */
     public String excluir(int id) {
+
+        // Validação simples
         if (id <= 0) {
             return "ERRO: ID inválido para exclusão.";
         }
@@ -150,7 +170,11 @@ public class CategoriaService {
         try {
             categoriaDAO.excluir(id);
             return "OK: Categoria excluída com sucesso!";
+
         } catch (Exception e) {
+
+            // Aqui cai quando o DAO lança a Exception:
+            // "Não é possível excluir a categoria: existem produtos associados."
             e.printStackTrace();
             return "ERRO ao excluir categoria: " + e.getMessage();
         }
